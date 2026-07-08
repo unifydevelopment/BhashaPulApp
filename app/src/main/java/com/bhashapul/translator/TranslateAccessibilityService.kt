@@ -14,6 +14,8 @@ class TranslateAccessibilityService : AccessibilityService() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private lateinit var overlayManager: OverlayManager
     private var lastText: String = ""
+    private var lastCallTime: Long = 0L
+    private val MIN_INTERVAL_MS = 2500L // wait at least this long between API calls
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -29,6 +31,10 @@ class TranslateAccessibilityService : AccessibilityService() {
 
         val screenText = collectVisibleText(root).trim()
         if (screenText.isEmpty() || screenText == lastText) return
+
+        val now = System.currentTimeMillis()
+        if (now - lastCallTime < MIN_INTERVAL_MS) return // too soon, skip this change
+        lastCallTime = now
         lastText = screenText
 
         if (event.packageName == packageName) return
@@ -36,15 +42,10 @@ class TranslateAccessibilityService : AccessibilityService() {
         val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         val targetLang = prefs.getString(Prefs.TARGET_LANG, "hi") ?: "hi"
 
-        mainHandler.post {
-            Toast.makeText(this, "Text mila: " + screenText.take(30), Toast.LENGTH_SHORT).show()
-        }
-
         executor.execute {
             val translated = TranslationClient.translate(screenText.take(400), targetLang)
             mainHandler.post {
                 if (translated != null) {
-                    Toast.makeText(this, "Translate ho gaya", Toast.LENGTH_SHORT).show()
                     overlayManager.showTranslation(translated)
                 } else {
                     Toast.makeText(this, "Fail: " + TranslationClient.lastError, Toast.LENGTH_LONG).show()
