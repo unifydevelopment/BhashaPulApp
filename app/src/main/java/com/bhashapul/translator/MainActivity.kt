@@ -9,9 +9,9 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import android.app.Activity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
 
     private val languages = listOf(
         "Hindi" to "hi",
