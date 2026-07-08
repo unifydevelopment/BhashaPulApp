@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bhasha Pul</string>
+    <string name="accessibility_service_description">
+        Bhasha Pul kisi bhi app mein screen par aane wale text ko padhkar
+        aapki select ki hui bhasha mein translate karke overlay mein dikhata hai.
+    </string>
+</resources>
