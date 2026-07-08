@@ -8,7 +8,7 @@ import java.net.URLEncoder
 object TranslationClient {
 
     var lastError: String? = null
-
+ private const val CONTACT_EMAIL = "backenddeveloper111@gmail.com"
     fun translate(text: String, targetLang: String): String? {
         if (text.isBlank()) return null
         return try {
