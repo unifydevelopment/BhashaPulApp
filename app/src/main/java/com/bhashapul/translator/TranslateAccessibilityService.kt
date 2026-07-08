@@ -15,35 +15,39 @@ class TranslateAccessibilityService : AccessibilityService() {
     private lateinit var overlayManager: OverlayManager
     private var lastText: String = ""
     private var lastCallTime: Long = 0L
-    private val MIN_INTERVAL_MS = 2500L // wait at least this long between API calls
+    private val MIN_INTERVAL_MS = 800L // small debounce so a double-tap doesn't fire twice
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         overlayManager = OverlayManager(this)
-        mainHandler.post {
-            Toast.makeText(this, "Bhasha Pul: service shuru ho gayi", Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
-        val root = rootInActiveWindow ?: return
 
-        val screenText = collectVisibleText(root).trim()
-        if (screenText.isEmpty() || screenText == lastText) return
-
-        val now = System.currentTimeMillis()
-        if (now - lastCallTime < MIN_INTERVAL_MS) return // too soon, skip this change
-        lastCallTime = now
-        lastText = screenText
+        // Only react to the user tapping / long-pressing / selecting text on a message
+        val relevantEvent = event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED ||
+                event.eventType == AccessibilityEvent.TYPE_VIEW_LONG_CLICKED ||
+                event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED
+        if (!relevantEvent) return
 
         if (event.packageName == packageName) return
+
+        val tappedText = extractTextFromEvent(event)
+        if (tappedText.isNullOrBlank()) return
+
+        val now = System.currentTimeMillis()
+        if (tappedText == lastText && now - lastCallTime < MIN_INTERVAL_MS) return
+        lastCallTime = now
+        lastText = tappedText
 
         val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         val targetLang = prefs.getString(Prefs.TARGET_LANG, "hi") ?: "hi"
 
+        overlayManager.showTranslation("Translate ho raha hai...")
+
         executor.execute {
-            val translated = TranslationClient.translate(screenText.take(400), targetLang)
+            val translated = TranslationClient.translate(tappedText.take(400), targetLang)
             mainHandler.post {
                 if (translated != null) {
                     overlayManager.showTranslation(translated)
@@ -54,15 +58,29 @@ class TranslateAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun collectVisibleText(node: AccessibilityNodeInfo, depth: Int = 0): String {
-        if (depth > 12) return ""
-        val builder = StringBuilder()
-        node.text?.let { if (it.isNotBlank()) builder.append(it).append(". ") }
+    // Try to get the text of the exact node the user interacted with.
+    // Falls back to walking a couple of levels up/down if the node itself has no text
+    // (many messaging apps put the text on a child or parent view of the clicked row).
+    private fun extractTextFromEvent(event: AccessibilityEvent): String? {
+        val source = event.source
+        if (source != null) {
+            val direct = findTextInNode(source, 0)
+            if (!direct.isNullOrBlank()) return direct
+        }
+        val fromEventText = event.text?.joinToString(" ")?.trim()
+        if (!fromEventText.isNullOrBlank()) return fromEventText
+        return null
+    }
+
+    private fun findTextInNode(node: AccessibilityNodeInfo, depth: Int): String? {
+        if (depth > 4) return null
+        node.text?.let { if (it.isNotBlank()) return it.toString() }
         for (i in 0 until node.childCount) {
             val child = node.getChild(i) ?: continue
-            builder.append(collectVisibleText(child, depth + 1))
+            val found = findTextInNode(child, depth + 1)
+            if (!found.isNullOrBlank()) return found
         }
-        return builder.toString()
+        return null
     }
 
     override fun onInterrupt() {
