@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="match_parent">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -16,16 +20,27 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Jo bhi bhasha aap chahte hain, wo select karein. Ye har app ke andar text ko usi bhasha mein translate karega."
+        android:text="Screen translate karne ke liye aur voice se kahin bhi type karne ke liye, neeche settings karein."
         android:layout_marginBottom="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Aapki bhasha (target language)" />
+        android:text="Screen translation: aapki bhasha (target language)" />
 
     <Spinner
         android:id="@+id/targetLangSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Voice typing: aap kis bhasha mein bolenge" />
+
+    <Spinner
+        android:id="@+id/voiceLangSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp" />
@@ -43,11 +58,19 @@
         android:layout_marginTop="12dp"
         android:text="2. Accessibility mein Bhasha Pul on karein" />
 
+    <Button
+        android:id="@+id/btnVoiceTyping"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="3. Voice typing shuru karein" />
+
     <TextView
         android:id="@+id/statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Dono steps poore karne ke baad, kisi bhi app ko khol kar dekhein — translation overlay apne aap aa jayega." />
+        android:text="Steps 1 aur 2 poore karne ke baad, koi bhi app kholkar message par tap/long-press karein translation ke liye. Step 3 on karne ke baad, floating mic button kisi bhi text box mein bolke likhne ke liye milega." />
 
 </LinearLayout>
+</ScrollView>
